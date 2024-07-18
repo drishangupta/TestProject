@@ -1,27 +1,26 @@
-
-#from django.http import HttpResponse
+from typing import Any
 from django.db.models import F
+from django.db.models.query import QuerySet
+from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
-from django.http import HttpResponse, HttpResponseRedirect
-from .models import Choice, Question
-from django.urls import path
 from django.urls import reverse
-# from django.template import loader
-def index(request):
-    latest_question_list = Question.objects.order_by("-pub_date")[0:5]
-    # template = loader.get_template("polls/index.html")
-    hail = [0,2,4,5]
-    context = {"hail":hail,"latest_question_list":latest_question_list}
-    return render(request, "polls/index.html", context)
+from django.views import generic
+from .models import Choice, Question
 
-def detail(request, question_id):
-    question = get_object_or_404(Question,pk=question_id)
-    return render(request,"polls/detail.html",{"question":question})
+class IndexView(generic.ListView):
+    template_name = "polls/index.html"
+    context_object_name = "latest_question_list"
 
+    def get_queryset(self) -> QuerySet[Any]: #gets the list of items for this view. Iterable
+        return Question.objects.order_by("-pub_date")[:5]
+    
+class DetailView(generic.DeleteView):
+    model = Question
+    template_name="polls/detail.html"
 
-def results(request, question_id):
-    question = get_object_or_404(Question,pk=question_id)
-    return render(request, "polls/results.html",{"question":question})
+class ResultsView(generic.DeleteView):
+    model = Question
+    template_name = "polls/results.html"
 
 def vote(request, question_id):
     question = get_object_or_404(Question, pk=question_id)
